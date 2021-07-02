@@ -1,0 +1,6 @@
+domain: tsutsumi.io
+layout:
+- go.kubebuilder.io/v3
+projectName: k8s-object-refs
+repo: github.com/toumorokoshi/k8s-object-refs
+version: "3"
