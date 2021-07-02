@@ -1,0 +1,19 @@
+# example manifest for the Guestbook kind
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: guestbook-test
+---
+apiVersion: webapp.tsutsumi.io/v1
+kind: Guestbook
+metadata:
+  namespace: guestbook-test
+  name: guestbook-example
+spec:
+  foo: example
+  fooRef:
+    name: guestbook-example
+    namespace: guestbook-test
+    group: webapp.tsutsumi.io
+    version: v1
+

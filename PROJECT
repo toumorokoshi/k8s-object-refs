@@ -3,4 +3,14 @@ layout:
 - go.kubebuilder.io/v3
 projectName: k8s-object-refs
 repo: github.com/toumorokoshi/k8s-object-refs
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: tsutsumi.io
+  group: webapp
+  kind: Guestbook
+  path: github.com/toumorokoshi/k8s-object-refs/api/v1
+  version: v1
 version: "3"
