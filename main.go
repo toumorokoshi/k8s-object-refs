@@ -33,6 +33,7 @@ import (
 
 	webappv1 "github.com/toumorokoshi/k8s-object-refs/api/v1"
 	"github.com/toumorokoshi/k8s-object-refs/controllers"
+	"github.com/toumorokoshi/k8s-object-refs/pkg/refs"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -78,9 +79,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// CUSTOM CODE: a ref mananger must be spawned
+	refManager := refs.NewRefManager()
+	refManager.SetupWithManager(mgr)
+
 	if err = (&controllers.GuestbookReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:     mgr.GetClient(),
+		Scheme:     mgr.GetScheme(),
+		RefManager: refManager,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Guestbook")
 		os.Exit(1)

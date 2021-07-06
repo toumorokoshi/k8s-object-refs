@@ -41,21 +41,15 @@ spec:
                   to remove/update
                 type: string
               fooRef:
-                description: FooRef is a reference to a particular type
+                description: FooRef is a reference to a specific object
                 properties:
-                  group:
-                    type: string
                   name:
                     type: string
                   namespace:
                     type: string
-                  version:
-                    type: string
                 required:
-                - group
                 - name
                 - namespace
-                - version
                 type: object
             type: object
           status:

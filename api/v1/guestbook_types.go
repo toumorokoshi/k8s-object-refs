@@ -31,15 +31,15 @@ type GuestbookSpec struct {
 	// Foo is an example field of Guestbook. Edit guestbook_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
 
-	// FooRef is a reference to a particular type
-	FooRef GenericObjectRef `json:"fooRef,omitempty"`
+	// FooRef is a reference to a specific object
+	FooRef SingleResourceRef `json:"fooRef,omitempty"`
 }
 
-type GenericObjectRef struct {
+// SingleResourceRef is a struct to contain the information
+// required to reference a single resource type
+type SingleResourceRef struct {
 	Name      string `json:"name"`
-	NameSpace string `json:"namespace"`
-	Group     string `json:"group"`
-	Version   string `json:"version"`
+	Namespace string `json:"namespace"`
 }
 
 // GuestbookStatus defines the observed state of Guestbook

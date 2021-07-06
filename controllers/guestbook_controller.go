@@ -25,12 +25,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	webappv1 "github.com/toumorokoshi/k8s-object-refs/api/v1"
+	"github.com/toumorokoshi/k8s-object-refs/pkg/refs"
 )
 
 // GuestbookReconciler reconciles a Guestbook object
 type GuestbookReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme     *runtime.Scheme
+	RefManager refs.RefManager
 }
 
 //+kubebuilder:rbac:groups=webapp.tsutsumi.io,resources=guestbooks,verbs=get;list;watch;create;update;patch;delete
@@ -54,19 +56,21 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	logger.Info("gvnn: %v:%v:%v:%v",
-		guestBook.Spec.FooRef.Group,
-		guestBook.Spec.FooRef.Version,
-		guestBook.Spec.FooRef.NameSpace,
-		guestBook.Spec.FooRef.Name,
-	)
+	logger.Info("nn")
 
+	// CUSTOM: update entry
+
+	// queue := workqueue.NewNamedRateLimitingQueue(
+	// 	workqueue.DefaultControllerRateLimiter(),
+	// 	"foo",
+	// )
+	// src := source.Kind{Type: &v1.Pod{}}
+	// src.Start(ctx, &HandleUpdateEvent{ctx: ctx}, queue)
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *GuestbookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&webappv1.Guestbook{}).
-		Complete(r)
+		For(&webappv1.Guestbook{}).Complete(r)
 }
