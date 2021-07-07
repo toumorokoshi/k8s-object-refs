@@ -1,0 +1,7 @@
+apiVersion: webapp.tsutsumi.io/v1
+kind: Hotel
+metadata:
+  name: hotel-sample
+spec:
+  # Add fields here
+  foo: bar

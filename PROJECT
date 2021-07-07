@@ -13,4 +13,13 @@ resources:
   kind: Guestbook
   path: github.com/toumorokoshi/k8s-object-refs/api/v1
   version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: tsutsumi.io
+  group: webapp
+  kind: Hotel
+  path: github.com/toumorokoshi/k8s-object-refs/api/v1
+  version: v1
 version: "3"
