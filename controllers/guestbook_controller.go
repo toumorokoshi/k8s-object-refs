@@ -57,6 +57,7 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	logger.Info("nn")
+	// r.RefManager
 
 	// CUSTOM: update entry
 

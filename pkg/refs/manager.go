@@ -27,7 +27,7 @@ type RefManager struct {
 	// watchers stores handlers to the watchers RefManager has
 	// started, to enable proper garbage collection as they are no
 	// longer used.
-	// watchers map[source.Kind]Watch
+	// watchers map[GVK]Watch
 }
 
 func NewRefManager() RefManager {
@@ -42,7 +42,15 @@ func (r *RefManager) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // UpdateSubscriptions consumes all namespaces that are
-func (r *RefManager) UpdateSubscriptions(source source.Kind, namespaceName types.NamespacedName, queue QueueContext) {
+func (r *RefManager) UpdateSubscriptions(gvk GVK, namespaceName types.NamespacedName, queue QueueContext) error {
+	source := source.Kind{
+		Type: gvk.ToClientObject(),
+	}
+	if err := r.manager.SetFields(source); err != nil {
+		return err
+	}
+	source.Start()
+	r.manager.Add
 	// 1. update map
 	// 2.
 }

@@ -4,6 +4,12 @@ The goal of this repository is to build a proof of concept for fast object refer
 
 Normally, an object that references another object takes a long time to resolve, as it's dependent on the rate of the controller loop to refresh the resource state. This can be exacerbated with additional guards against unneeded work such as exponential backoffs.
 
+## TODO
+
+- controller runtime
+  - add support for getting the WorkQueue for a controller in reconcile() call
+  - enable cancelling a controller
+
 ## Design considerations
 
 ### Single-resource object references
@@ -57,7 +63,7 @@ If controller-runtime somehow enabled re-use of watch, then that significantly r
 - Is the cache injected?
   - InjectCache is only called by CacheInto, which is only called by SetFields on the cluster struct.
 
-### How to identify controllers / queues to sen events o?
+### How to identify controllers / queues to send events o?
 
 - [controller is a runnable](vendor/sigs.k8s.io/controller-runtime/pkg/manager/internal.go:588). so no way to get a list of controllers from that.
 
