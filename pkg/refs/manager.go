@@ -2,9 +2,12 @@ package refs
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -13,17 +16,18 @@ import (
 
 // TODO: when a queue object is exposed, use that instead.
 type QueueContext struct {
-	ctx        context.Context
-	req        ctrl.Request
-	reconciler reconcile.Reconciler
+	Context    context.Context
+	Req        ctrl.Request
+	Reconciler reconcile.Reconciler
 }
 
 // TODO: split to types
 
 type RefManager struct {
-	// eventMap          EventMap
-	controllerMapping map[GVK]map[types.NamespacedName][]QueueContext
-	manager           ctrl.Manager
+	EventMapping         map[GVK]map[types.NamespacedName][]QueueContext
+	Manager              ctrl.Manager
+	ContextsByController map[GVK]context.Context
+
 	// watchers stores handlers to the watchers RefManager has
 	// started, to enable proper garbage collection as they are no
 	// longer used.
@@ -32,25 +36,47 @@ type RefManager struct {
 
 func NewRefManager() RefManager {
 	return RefManager{
-		controllerMapping: make(map[GVK]map[types.NamespacedName][]QueueContext),
+		EventMapping: make(map[GVK]map[types.NamespacedName][]QueueContext),
 	}
 }
 
 func (r *RefManager) SetupWithManager(mgr ctrl.Manager) error {
-	r.manager = mgr
+	r.Manager = mgr
 	return nil
 }
 
 // UpdateSubscriptions consumes all namespaces that are
-func (r *RefManager) UpdateSubscriptions(gvk GVK, namespaceName types.NamespacedName, queue QueueContext) error {
-	source := source.Kind{
-		Type: gvk.ToClientObject(),
+func (r *RefManager) UpdateSubscriptions(gvk GVK, namespacedName types.NamespacedName, queue QueueContext) error {
+	contextByNamespaceName := make(map[types.NamespacedName][]QueueContext)
+	contextByNamespaceName[namespacedName] = []QueueContext{queue}
+	r.EventMapping[gvk] = contextByNamespaceName
+	r.startController(gvk)
+	return nil
+}
+
+// TODO handle errors
+func (r *RefManager) startController(gvk GVK) error {
+	// if a context already exists, then we already spawned
+	// a controller.
+	if context := r.ContextsByController[gvk]; context != nil {
+		return nil
 	}
-	if err := r.manager.SetFields(source); err != nil {
-		return err
+	c, err := controller.NewUnmanaged(fmt.Sprintf("%v", gvk), r.Manager, controller.Options{
+		Reconciler: &RefReconciler{
+			Client:  r.Manager.GetClient(),
+			manager: r,
+			gvk:     gvk,
+		},
+	})
+	if err != nil {
+		r.Manager.GetLogger().Error(err, "unable to create manager")
 	}
-	source.Start()
-	r.manager.Add
-	// 1. update map
-	// 2.
+	if err := c.Watch(&source.Kind{Type: gvk.ToClientObject()}, &handler.EnqueueRequestForObject{}); err != nil {
+		r.Manager.GetLogger().Error(err, "unable to watch")
+	}
+
+	ctx := context.Background()
+	c.Start(ctx)
+	r.ContextsByController[gvk] = ctx
+	return nil
 }

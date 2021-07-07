@@ -8,25 +8,25 @@ import (
 )
 
 type GVK struct {
-	group   string
-	version string
-	kind    string
+	Group   string
+	Version string
+	Kind    string
 }
 
 func GVKFromClientObject(obj client.Object) GVK {
 	rawGVK := obj.GetObjectKind().GroupVersionKind()
 	return GVK{
-		group:   rawGVK.Group,
-		version: rawGVK.Version,
-		kind:    rawGVK.Kind,
+		Group:   rawGVK.Group,
+		Version: rawGVK.Version,
+		Kind:    rawGVK.Kind,
 	}
 }
 
 func (g *GVK) ToClientObject() client.Object {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"kind":       g.kind,
-			"apiVersion": fmt.Sprintf("%v/%v", g.group, g.version),
+			"kind":       g.Kind,
+			"apiVersion": fmt.Sprintf("%v/%v", g.Group, g.Version),
 		},
 	}
 }

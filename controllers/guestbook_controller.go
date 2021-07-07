@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -55,6 +56,23 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		logger.Error(err, "unable to fetch GuestBook")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+
+	nn := types.NamespacedName{
+		Name:      guestBook.Spec.FooRef.Name,
+		Namespace: guestBook.Spec.FooRef.Namespace,
+	}
+
+	qc := refs.QueueContext{
+		Context:    ctx,
+		Req:        req,
+		Reconciler: r,
+	}
+
+	r.RefManager.UpdateSubscriptions(refs.GVK{
+		Group:   "core",
+		Version: "v1",
+		Kind:    "Pod",
+	}, nn, qc)
 
 	logger.Info("nn")
 	// r.RefManager
