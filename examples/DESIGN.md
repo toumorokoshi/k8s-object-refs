@@ -9,6 +9,8 @@ Normally, an object that references another object takes a long time to resolve,
 - controller runtime
   - add support for getting the WorkQueue for a controller in reconcile() call
   - enable cancelling a controller
+  - find an idiomatic way to get the latest status from an object.
+    - [similar symptom, although different need](https://github.com/kubernetes-sigs/controller-runtime/issues/585).
 
 ## Design considerations
 

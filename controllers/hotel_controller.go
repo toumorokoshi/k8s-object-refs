@@ -59,10 +59,10 @@ func (r *HotelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	readyStatus := v1.ConditionFalse
-	readyReason := "DependencyNotReady"
+	readyReason := "OkSetToFalse"
 	if hotel.Spec.Ok {
 		readyStatus = v1.ConditionTrue
-		readyReason = "Ready"
+		readyReason = "OkSetToTrue"
 	}
 
 	meta.SetStatusCondition(&hotel.Status.Conditions, v1.Condition{

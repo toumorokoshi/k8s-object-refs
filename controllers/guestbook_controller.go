@@ -97,18 +97,23 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	readyStatus := v1.ConditionFalse
-	readyMessage := "dependent object hotel is not ready"
+	readyReason := "DependencyNotReady"
 
-	hotelReadyCondition := meta.FindStatusCondition(hotel.Status.Conditions, "Ready")
-	if hotelReadyCondition != nil && hotelReadyCondition.Status == v1.ConditionTrue {
+	// TODO: enable using conditions. This is not possible due to the
+	// cached object not having the status updates from the other controller.
+	// see https://github.com/kubernetes-sigs/controller-runtime/issues/585 for a related issue.
+	// hotelReadyCondition := meta.FindStatusCondition(hotel.Status.Conditions, "Ready")
+	// if hotelReadyCondition != nil && hotelReadyCondition.Status == v1.ConditionTrue {
+	if hotel.Spec.Ok {
+		logger.Info("hotel is ready")
 		readyStatus = v1.ConditionTrue
-		readyMessage = "guestbook is ready"
+		readyReason = "DependencyReady"
 	}
 
 	meta.SetStatusCondition(&guestbook.Status.Conditions, v1.Condition{
 		Type:   "Ready",
 		Status: readyStatus,
-		Reason: readyMessage,
+		Reason: readyReason,
 	})
 
 	if err := r.Status().Update(ctx, &guestbook); err != nil {

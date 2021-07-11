@@ -13,8 +13,8 @@ spec:
   foo: example2
   # implicitly references Hotel objects
   fooRef:
-    name: hotel-example
     namespace: guestbook-test
+    name: hotel-example
 ---
 apiVersion: webapp.tsutsumi.io/v1
 kind: Hotel
