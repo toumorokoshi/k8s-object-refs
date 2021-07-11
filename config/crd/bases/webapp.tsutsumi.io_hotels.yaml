@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: guestbooks.webapp.tsutsumi.io
+  name: hotels.webapp.tsutsumi.io
 spec:
   group: webapp.tsutsumi.io
   names:
-    kind: Guestbook
-    listKind: GuestbookList
-    plural: guestbooks
-    singular: guestbook
+    kind: Hotel
+    listKind: HotelList
+    plural: hotels
+    singular: hotel
   scope: Namespaced
   versions:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: Guestbook is the Schema for the guestbooks API
+        description: Hotel is the Schema for the hotels API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,31 +34,21 @@ spec:
           metadata:
             type: object
           spec:
-            description: GuestbookSpec defines the desired state of Guestbook
+            description: HotelSpec defines the desired state of Hotel
             properties:
-              foo:
-                description: Foo is an example field of Guestbook. Edit guestbook_types.go
-                  to remove/update
-                type: string
-              fooRef:
-                description: FooRef is a reference to a specific object
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
-                - namespace
-                type: object
+              ok:
+                description: ok will be a signal to dependent objects (Guestbook)
+                  that the object is ready to go
+                type: boolean
+            required:
+            - ok
             type: object
           status:
-            description: GuestbookStatus defines the observed state of Guestbook
+            description: HotelStatus defines the observed state of Hotel
             properties:
               conditions:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
-                  this file Important: Run "make" to regenerate code after modifying
                   this file'
                 items:
                   description: "Condition contains details for one aspect of the current

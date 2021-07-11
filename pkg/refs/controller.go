@@ -7,6 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type RefReconciler struct {
@@ -16,6 +17,7 @@ type RefReconciler struct {
 }
 
 func (r *RefReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := log.FromContext(ctx)
 	object := &unstructured.Unstructured{}
 	if err := r.Get(ctx, req.NamespacedName, object); err != nil {
 		subscribers := r.manager.EventMapping[r.gvk]
@@ -28,6 +30,7 @@ func (r *RefReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 		}
 		queueContexts := subscribers[namespacedName]
 		for _, qc := range queueContexts {
+			logger.Info("enqueuing reconcile")
 			qc.Reconciler.Reconcile(qc.Context, qc.Req)
 		}
 	}

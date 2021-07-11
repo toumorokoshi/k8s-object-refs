@@ -36,7 +36,8 @@ type RefManager struct {
 
 func NewRefManager() RefManager {
 	return RefManager{
-		EventMapping: make(map[GVK]map[types.NamespacedName][]QueueContext),
+		EventMapping:         make(map[GVK]map[types.NamespacedName][]QueueContext),
+		ContextsByController: make(map[GVK]context.Context),
 	}
 }
 
@@ -76,7 +77,11 @@ func (r *RefManager) startController(gvk GVK) error {
 	}
 
 	ctx := context.Background()
-	c.Start(ctx)
+	go func() {
+		if err := c.Start(ctx); err != nil {
+			// TODO: error handling
+		}
+	}()
 	r.ContextsByController[gvk] = ctx
 	return nil
 }

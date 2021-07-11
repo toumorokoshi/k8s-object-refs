@@ -28,14 +28,20 @@ type HotelSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Hotel. Edit hotel_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// ok will be a signal to dependent objects (Guestbook) that the
+	// object is ready to go
+	Ok bool `json:"ok"`
 }
 
 // HotelStatus defines the observed state of Hotel
 type HotelStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 //+kubebuilder:object:root=true

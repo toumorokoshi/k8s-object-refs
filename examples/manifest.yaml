@@ -10,10 +10,17 @@ metadata:
   namespace: guestbook-test
   name: guestbook-example
 spec:
-  foo: example
+  foo: example2
+  # implicitly references Hotel objects
   fooRef:
-    name: guestbook-example
+    name: hotel-example
     namespace: guestbook-test
-    group: webapp.tsutsumi.io
-    version: v1
-
+---
+apiVersion: webapp.tsutsumi.io/v1
+kind: Hotel
+metadata:
+  namespace: guestbook-test
+  name: hotel-example
+spec:
+  ok: true
+---

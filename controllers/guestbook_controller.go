@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/api/meta"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,6 +30,12 @@ import (
 	webappv1 "github.com/toumorokoshi/k8s-object-refs/api/v1"
 	"github.com/toumorokoshi/k8s-object-refs/pkg/refs"
 )
+
+var HOTEL_REF = refs.GVK{
+	Group:   "webapp.tsutsumi.io",
+	Version: "v1",
+	Kind:    "Hotel",
+}
 
 // GuestbookReconciler reconciles a Guestbook object
 type GuestbookReconciler struct {
@@ -51,15 +59,17 @@ type GuestbookReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	var guestBook webappv1.Guestbook
-	if err := r.Get(ctx, req.NamespacedName, &guestBook); err != nil {
+	var guestbook webappv1.Guestbook
+	if err := r.Get(ctx, req.NamespacedName, &guestbook); err != nil {
+		// TODO: figure out a way to clear based on queue context
+		// r.RefManager.UpdateSubscriptions(HOTEL_REF, namespacedName types.NamespacedName, queue refs.QueueContext)
 		logger.Error(err, "unable to fetch GuestBook")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	nn := types.NamespacedName{
-		Name:      guestBook.Spec.FooRef.Name,
-		Namespace: guestBook.Spec.FooRef.Namespace,
+		Name:      guestbook.Spec.FooRef.Name,
+		Namespace: guestbook.Spec.FooRef.Namespace,
 	}
 
 	qc := refs.QueueContext{
@@ -68,23 +78,45 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		Reconciler: r,
 	}
 
+	// UpdateSubscriptions must be called on every loop, and
+	// can also be used to clear entries.
 	r.RefManager.UpdateSubscriptions(refs.GVK{
-		Group:   "core",
+		Group:   "webapp.tsutsumi.io",
 		Version: "v1",
-		Kind:    "Pod",
+		Kind:    "Hotel",
 	}, nn, qc)
 
-	logger.Info("nn")
-	// r.RefManager
+	// ref checking logic happens after subscriptions are updated,
+	// to ensure that subscriptions are up-to-date even if the
+	// target object is not yet available.
 
-	// CUSTOM: update entry
+	var hotel webappv1.Hotel
+	if err := r.Get(ctx, nn, &hotel); err != nil {
+		logger.Error(err, "unable to find dependent hotel.")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
-	// queue := workqueue.NewNamedRateLimitingQueue(
-	// 	workqueue.DefaultControllerRateLimiter(),
-	// 	"foo",
-	// )
-	// src := source.Kind{Type: &v1.Pod{}}
-	// src.Start(ctx, &HandleUpdateEvent{ctx: ctx}, queue)
+	readyStatus := v1.ConditionFalse
+	readyMessage := "dependent object hotel is not ready"
+
+	hotelReadyCondition := meta.FindStatusCondition(hotel.Status.Conditions, "Ready")
+	if hotelReadyCondition != nil && hotelReadyCondition.Status == v1.ConditionTrue {
+		readyStatus = v1.ConditionTrue
+		readyMessage = "guestbook is ready"
+	}
+
+	meta.SetStatusCondition(&guestbook.Status.Conditions, v1.Condition{
+		Type:   "Ready",
+		Status: readyStatus,
+		Reason: readyMessage,
+	})
+
+	if err := r.Status().Update(ctx, &guestbook); err != nil {
+		logger.Error(err, "unable to update guestbook")
+		return ctrl.Result{}, err
+	}
+
+	logger.Info("end of controller")
 	return ctrl.Result{}, nil
 }
 
