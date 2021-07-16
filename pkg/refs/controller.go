@@ -22,10 +22,18 @@ func (r *RefReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	if subscribers == nil {
 		return ctrl.Result{}, nil
 	}
-	queueContexts := subscribers[req.NamespacedName]
-	for _, qc := range queueContexts {
+	curElement := subscribers[req.NamespacedName]
+	if curElement == nil {
+		return ctrl.Result{}, nil
+	}
+	// iterate past the head, which is a dummy element
+	curElement = curElement.nextInEventMap
+	for curElement != nil {
 		logger.Info("enqueuing reconcile")
+		// TODO: error handling
+		qc := curElement.queueContext
 		qc.Reconciler.Reconcile(qc.Context, qc.Req)
+		curElement = curElement.nextInEventMap
 	}
 	return ctrl.Result{}, nil
 }

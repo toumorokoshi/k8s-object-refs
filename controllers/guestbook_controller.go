@@ -59,36 +59,30 @@ type GuestbookReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	var guestbook webappv1.Guestbook
-	if err := r.Get(ctx, req.NamespacedName, &guestbook); err != nil {
-		// TODO: figure out a way to clear based on queue context
-		// r.RefManager.UpdateSubscriptions(HOTEL_REF, namespacedName types.NamespacedName, queue refs.QueueContext)
-		logger.Error(err, "unable to fetch GuestBook")
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	nn := types.NamespacedName{
-		Name:      guestbook.Spec.FooRef.Name,
-		Namespace: guestbook.Spec.FooRef.Namespace,
-	}
-
 	qc := refs.QueueContext{
 		Context:    ctx,
 		Req:        req,
 		Reconciler: r,
 	}
-
-	// UpdateSubscriptions must be called on every loop, and
-	// can also be used to clear entries.
-	r.RefManager.UpdateSubscriptions(refs.GVK{
-		Group:   "webapp.tsutsumi.io",
-		Version: "v1",
-		Kind:    "Hotel",
-	}, nn, qc)
+	var guestbook webappv1.Guestbook
+	if err := r.Get(ctx, req.NamespacedName, &guestbook); err != nil {
+		// If we're unable to retrieve the object, clear the
+		// subscriptions.
+		r.RefManager.UpdateSubscriptions(qc, []refs.RefSubscription{})
+		logger.Error(err, "unable to fetch GuestBook")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
 	// ref checking logic happens after subscriptions are updated,
 	// to ensure that subscriptions are up-to-date even if the
 	// target object is not yet available.
+	nn := types.NamespacedName{
+		Name:      guestbook.Spec.FooRef.Name,
+		Namespace: guestbook.Spec.FooRef.Namespace,
+	}
+	r.RefManager.UpdateSubscriptions(qc, []refs.RefSubscription{
+		{Gvk: HOTEL_REF, NamespacedName: nn},
+	})
 
 	var hotel webappv1.Hotel
 	if err := r.Get(ctx, nn, &hotel); err != nil {

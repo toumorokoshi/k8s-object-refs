@@ -8,18 +8,30 @@ Normally, an object that references another object takes a long time to resolve,
 
 - controller runtime
   - add support for getting the WorkQueue for a controller in reconcile() call
-  - enable cancelling a controller
   - find an idiomatic way to get the latest status from an object.
     - [similar symptom, although different need](https://github.com/kubernetes-sigs/controller-runtime/issues/585).
 
-## Design considerations
+## Implementation
 
-### Single-resource object references
+The fundamental approach is to have a manager with a registry of the objects that are dependents, with a mapping of those to their referents.
 
-For simple object references where the resource that is references is pre-determined, the watch call can be re-used for all instances of the referer resource, assuming once can store a map of the referrer-referent pair.
+A controller is spawned per resource, which is for efficiency: hundreds or thousands of objects can share the same controller, even if they are watching different objects.
 
+Once there are no object references, the object references controller for that resource is cancelled, ensuring that there are no additional watch calls on resources that are no longer relevant to the controller.
 
-- is it better to watch single instances of an object, vs watching all of a particular resource?
+## Design Considerations
+
+### Sharing watch calls
+
+By leveraging controller-runtime Controllers and their watching mechanism, this approach is able to re-use the existing Informers that are used to manage standard resources. In other words, this choice enables that only one Watch will exist per resource, per process.
+
+### object referrent - referrer mapping
+
+One key element of this architecture is a mapping of object referrents to their referrers. It is important to note that this is not just a mapping of object refferent -> object referrer controller: to completely specify the referrent, the request must also be included in the identifier.
+
+In addition, reconcilers should not store state in between requests: this means that the reconciler cannot store state around which objects it is referring to. Thus, the object reference manager must expose a way to update the full list of object references, which also needs to clear ones previously set.
+
+To figure out the deltas, one could store a double linked list with all of the elements pertaining to that particular controler-nn. Then you could
 
 ### Implementation
 
@@ -50,6 +62,7 @@ For simple object references where the resource that is references is pre-determ
 ### Multiple object reference types
 
 If the object reference type is not known beforehand, then that requires watch calls to be constructed ad-hoc as a referrer object is created.
+
 
 ## Questions
 
