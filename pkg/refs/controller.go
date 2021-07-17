@@ -32,7 +32,7 @@ func (r *RefReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 		logger.Info("enqueuing reconcile")
 		// TODO: error handling
 		qc := curElement.queueContext
-		qc.Reconciler.Reconcile(qc.Context, qc.Req)
+		qc.Reconciler.Reconcile(ctx, qc.Req)
 		curElement = curElement.nextInEventMap
 	}
 	return ctrl.Result{}, nil

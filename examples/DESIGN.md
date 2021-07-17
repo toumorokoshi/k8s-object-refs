@@ -8,6 +8,7 @@ Normally, an object that references another object takes a long time to resolve,
 
 - controller runtime
   - add support for getting the WorkQueue for a controller in reconcile() call
+    - this is also required to not use the incorrect context.
   - find an idiomatic way to get the latest status from an object.
     - [similar symptom, although different need](https://github.com/kubernetes-sigs/controller-runtime/issues/585).
 
@@ -29,42 +30,11 @@ By leveraging controller-runtime Controllers and their watching mechanism, this 
 
 One key element of this architecture is a mapping of object referrents to their referrers. It is important to note that this is not just a mapping of object refferent -> object referrer controller: to completely specify the referrent, the request must also be included in the identifier.
 
-In addition, reconcilers should not store state in between requests: this means that the reconciler cannot store state around which objects it is referring to. Thus, the object reference manager must expose a way to update the full list of object references, which also needs to clear ones previously set.
+In addition, reconcilers should not store state in between requests: this means that the reconciler cannot store state around which objects it is referring to. Thus, the object reference manager must expose a way to update the full list of object references, which also needs to clear ones previously set. This is done by requiring the controller to pass the full set of subscriptions every time, which requires re-calculating the subscriptions per reocncile run.
 
-To figure out the deltas, one could store a double linked list with all of the elements pertaining to that particular controler-nn. Then you could
+To figure out the deltas, one could store a double linked list with all of the elements pertaining to that particular controler-nn. Then you can remove subscriptions with O(1) cost per subscription.
 
-### Implementation
-
-- init
-  - start a new watch for the target resource type(s)
-- object create
-  - in Reconcile(), if the target object is not ready, enqueue the objects NamespacedName into the map to be called when the referrent is ready
-- when referrent has a state change
-  - when watch is triggered, enqueue an immediate reconcile of the object that is waiting on that resource.
-
-- to re-use the cache, the object being watched has to share the types.
-
-### Additional cases
-
-- a single object referencing multiple referrents
-- referring to more than one of the same referrent
-
-### Possible Issues
-
-- Make namespacedname a possible struct in a spec by adding json annotations?
-  - vendor/k8s.io/apimachinery/pkg/types/namespacedname.go:27
-  - with this, I won't have to create my own types.go to reference the object.
-- add context to eventhandler?
--
-
-## Future Work
-
-### Multiple object reference types
-
-If the object reference type is not known beforehand, then that requires watch calls to be constructed ad-hoc as a referrer object is created.
-
-
-## Questions
+## Notes
 
 ### Does controller-runtime re-use watches?
 

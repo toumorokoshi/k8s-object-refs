@@ -17,7 +17,7 @@ import (
 
 // TODO: when a queue object is exposed, use that instead.
 type QueueContext struct {
-	Context    context.Context
+	// Context    context.Context
 	Req        ctrl.Request
 	Reconciler reconcile.Reconciler
 }
@@ -81,8 +81,8 @@ func (r *RefManager) UpdateSubscriptions(qc QueueContext, refs []RefSubscription
 	foundSubscriptions := make([]bool, len(refs))
 	curElement := r.SubscriptionsByReferrer[qc]
 	if curElement == nil {
-		curElement := SubscriptionNode{}
-		r.SubscriptionsByReferrer[qc] = &curElement
+		curElement = &SubscriptionNode{}
+		r.SubscriptionsByReferrer[qc] = curElement
 
 	} else {
 		// always iterate past the first element, since it's a placeholder
@@ -121,7 +121,7 @@ func (r *RefManager) UpdateSubscriptions(qc QueueContext, refs []RefSubscription
 		}
 		// it's a new node, so add to both EventMapping and context linked
 		// lists
-		r.EventMapping.insert(node)
+		r.EventMapping.insert(&node)
 		node.nextInContext = r.SubscriptionsByReferrer[qc].nextInContext
 		node.prevInContext = r.SubscriptionsByReferrer[qc]
 		if node.nextInContext != nil {
@@ -149,7 +149,7 @@ func (r *RefManager) decrementGVKSubscriptions(gvk GVK) {
 	}
 }
 
-func (e *EventMapping) insert(node SubscriptionNode) {
+func (e *EventMapping) insert(node *SubscriptionNode) {
 	gvk := node.subscription.Gvk
 	namespacedName := node.subscription.NamespacedName
 	subscriptionsByNamespaceName := (*e)[gvk]
@@ -165,12 +165,12 @@ func (e *EventMapping) insert(node SubscriptionNode) {
 	}
 	// TODO: fix this to become O(1) do the insert at the beginning,
 	// without iterating
-	currentNode := headOfList
-	for currentNode.nextInEventMap != nil {
-		currentNode = currentNode.nextInEventMap
+	node.nextInEventMap = headOfList.nextInEventMap
+	if node.nextInEventMap != nil {
+		node.nextInEventMap.prevInEventMap = node
 	}
-	currentNode.nextInEventMap = &node
-	node.prevInEventMap = currentNode
+	node.prevInEventMap = headOfList
+	headOfList.nextInEventMap = node
 }
 
 // TODO handle errors

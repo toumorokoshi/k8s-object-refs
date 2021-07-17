@@ -60,7 +60,7 @@ type GuestbookReconciler struct {
 func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	qc := refs.QueueContext{
-		Context:    ctx,
+		// Context:    ctx,
 		Req:        req,
 		Reconciler: r,
 	}
