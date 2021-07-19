@@ -22,5 +22,7 @@ metadata:
   namespace: guestbook-test
   name: hotel-example
 spec:
+  # to test out the immediate object refs,
+  # toggle this flag. (true will reconcile, false will not).
   ok: true
 ---
