@@ -40,17 +40,17 @@ To figure out the deltas, one could store a double linked list with all of the e
 
 If controller-runtime somehow enabled re-use of watch, then that significantly reduces the management of watch calls in controllers, as they can re-use instantiated watches if they already exist.
 
-- [controller managers delegate watch calls to the controllers themselves](vendor/sigs.k8s.io/controller-runtime/pkg/builder/controller.go:233).
-  - [they in turn delegate to the source](vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:135).
-    - [source.Kind reuses an informer if it exists for the same Type. This requires the cache to be injected](vendor/sigs.k8s.io/controller-runtime/pkg/source/source.go:114).
-      - [cache in injected here](vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114).
+- [controller managers delegate watch calls to the controllers themselves](vendor/sigs.k8s.io/controller-runtime/pkg/builder/controller.go#233).
+  - [they in turn delegate to the source](vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go#135).
+    - [source.Kind reuses an informer if it exists for the same Type. This requires the cache to be injected](vendor/sigs.k8s.io/controller-runtime/pkg/source/source.go#114).
+      - [cache in injected here](vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go#114).
 
 - Is the cache injected?
   - InjectCache is only called by CacheInto, which is only called by SetFields on the cluster struct.
 
 ### How to identify controllers / queues to send events o?
 
-- [controller is a runnable](vendor/sigs.k8s.io/controller-runtime/pkg/manager/internal.go:588). so no way to get a list of controllers from that.
+- [controller is a runnable](vendor/sigs.k8s.io/controller-runtime/pkg/manager/internal.go#588). so no way to get a list of controllers from that.
 
 - Controller has Queue, and a reconciler
 - Manager has runnables
